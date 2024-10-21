@@ -12,3 +12,4 @@
     - [后端2](https://github.com/yangxueyou/Nestjs/tree/main/gray_test1)
 - [短链服务](https://github.com/yangxueyou/Nestjs/tree/main/short-url)
 - [ioc学习](https://github.com/yangxueyou/Nestjs/tree/main/nest-ioc)
+- [大文件实现流式下载](https://github.com/yangxueyou/Nestjs/tree/main/download-test)
