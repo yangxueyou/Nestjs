@@ -1,0 +1,18 @@
+{
+  "name": "Launch via NPM",
+  "request": "launch",
+  "runtimeArgs": ["run-script", "start:dev"],
+  "console": "integratedTerminal",
+  "runtimeExecutable": "npm",
+  "skipFiles": ["<node_internals>/**"],
+  "type": "node",
+  "configurations": [
+    {
+      "name": "Launch Chrome",
+      "request": "launch",
+      "type": "chrome",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}

@@ -20,4 +20,4 @@
 
 - 会议室预订系统
     - [前端](https://github.com/yangxueyou/Nestjs/tree/main/book-management-system-backend) 
-    - [后端](https://github.com/yangxueyou/Nestjs/tree/main/book-management-system-frontend) 
+    - [后端](https://github.com/yangxueyou/Nestjs/tree/main/meeting_room_booking_system_backend) 
