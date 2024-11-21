@@ -13,6 +13,8 @@ import {
   BadRequestException,
   DefaultValuePipe,
   HttpStatus,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -36,6 +38,8 @@ import {
 import { LoginUserVo } from './vo/login-user.vo';
 import { RefreshTokenVo } from './vo/refresh-token.vo';
 import { UserListVo } from './vo/user-list.vo';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { storage } from '../my-file-storage';
 
 @ApiTags('用户管理模块')
 @Controller('user')
@@ -53,6 +57,29 @@ export class UserController {
 
   @Inject(ConfigService)
   private configService: ConfigService;
+
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      dest: 'uploads',
+      storage: storage,
+      // 限制下图片大小，最大 3M:
+      limits: {
+        fileSize: 1024 * 1024 * 3,
+      },
+      // callback 的第一个参数是 error，第二个参数是是否接收文件
+      fileFilter: (req, file, cb) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+          return cb(new BadRequestException('只能上传图片文件'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    console.log('file', file);
+    return file.path;
+  }
 
   // // 这个接口支持分页查询，传入 pageNo、pageSize，返回对应页的数据。
   // @Get('list')
@@ -142,8 +169,17 @@ export class UserController {
     return 'success';
   }
 
+  @ApiBearerAuth()
+  @ApiResponse({
+    type: String,
+    description: '发送成功',
+  })
+  @RequireLogin()
   @Get('update/captcha')
-  async updateCaptcha(@Query('address') address: string) {
+  async updateCaptcha(
+    // @Query('address') address: string
+    @UserInfo('email') address: string,
+  ) {
     const code = Math.random().toString().slice(2, 8);
 
     await this.redisService.set(
@@ -182,7 +218,7 @@ export class UserController {
     return await this.userService.update(userId, updateUserDto);
   }
 
-  @ApiBearerAuth()
+  // @ApiBearerAuth()
   @ApiQuery({
     name: 'address',
     description: '邮箱地址',
@@ -192,7 +228,7 @@ export class UserController {
     type: String,
     description: '发送成功',
   })
-  @RequireLogin()
+  // @RequireLogin()
   @Get('update_password/captcha')
   async updatePasswordCaptcha(@Query('address') address: string) {
     const code = Math.random().toString().slice(2, 8);
@@ -211,7 +247,7 @@ export class UserController {
     return '发送成功';
   }
 
-  @ApiBearerAuth()
+  // @ApiBearerAuth()
   @ApiBody({
     type: UpdateUserPasswordDto,
   })
@@ -222,13 +258,16 @@ export class UserController {
   // @Post 写个数组，就代表数组里的这两个路由是同一个 handler 处理。
   @Post(['update_password', 'admin/update_password'])
   // 这个接口同样是需要登录的，所以加上 @RequireLogin 的装饰器。
-  @RequireLogin()
+  // @RequireLogin()
   // 用 @UserInfo 从 request.user 取 userId，其余的通过 dto 传。
   async updatePassword(
-    @UserInfo('userId') userId: number,
+    // @UserInfo('userId') userId: number,
     @Body() passwordDto: UpdateUserPasswordDto,
   ) {
-    return await this.userService.updatePassword(userId, passwordDto);
+    return await this.userService.updatePassword(
+      // userId,
+      passwordDto,
+    );
   }
 
   @ApiResponse({
@@ -279,6 +318,7 @@ export class UserController {
       {
         userId: vo.userInfo.id,
         username: vo.userInfo.username,
+        email: vo.userInfo.email,
         roles: vo.userInfo.roles,
         permissions: vo.userInfo.permissions,
       },
@@ -322,6 +362,7 @@ export class UserController {
       {
         userId: vo.userInfo.id,
         username: vo.userInfo.username,
+        email: vo.userInfo.email,
         roles: vo.userInfo.roles,
         permissions: vo.userInfo.permissions,
       },
@@ -371,6 +412,7 @@ export class UserController {
         {
           userId: user.id,
           username: user.username,
+          email: user.email,
           roles: user.roles,
           permissions: user.permissions,
         },
@@ -417,6 +459,7 @@ export class UserController {
         {
           userId: user.id,
           username: user.username,
+          email: user.email,
           roles: user.roles,
           permissions: user.permissions,
         },

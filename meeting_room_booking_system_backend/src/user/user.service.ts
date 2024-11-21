@@ -145,7 +145,10 @@ export class UserService {
     }
   }
 
-  async updatePassword(userId: number, passwordDto: UpdateUserPasswordDto) {
+  async updatePassword(
+    // userId: number,
+    passwordDto: UpdateUserPasswordDto,
+  ) {
     const captcha = await this.redisService.get(
       `update_password_captcha_${passwordDto.email}`,
     );
@@ -159,7 +162,8 @@ export class UserService {
     }
 
     const foundUser = await this.userRepository.findOneBy({
-      id: userId,
+      // id: userId,
+      username: passwordDto.username,
     });
 
     foundUser.password = md5(passwordDto.password);
@@ -238,6 +242,7 @@ export class UserService {
     return {
       id: user.id,
       username: user.username,
+      email: user.email,
       isAdmin: user.isAdmin,
       roles: user.roles.map((item) => item.name),
       permissions: user.roles.reduce((arr, item) => {
