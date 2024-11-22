@@ -10,7 +10,7 @@ interface SearchUser {
   email: string;
 }
 
-interface UserSearchResult {
+export interface UserSearchResult {
   id: number; // 冻结用到的
   username: string;
   nickName: string;

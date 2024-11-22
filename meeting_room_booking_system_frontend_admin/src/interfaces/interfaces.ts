@@ -2,6 +2,10 @@ import axios from "axios";
 import { message } from "antd";
 import { UserInfo } from "../pages/InfoModify/InfoModify";
 import { UpdatePassword } from "../pages/PasswordModify/PasswordModify";
+import { CreateMeetingRoom } from "../pages/MeetingRoomManage/CreateMeetingRoomModal";
+import { UpdateMeetingRoom } from "../pages/MeetingRoomManage/UpdateMeetingRoom";
+import { SearchBooking } from "../pages/BookingManage/BookingManage";
+import dayjs from "dayjs";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:3000/",
@@ -111,4 +115,112 @@ export async function updatePasswordCaptcha(email: string) {
 
 export async function updatePassword(data: UpdatePassword) {
   return await axiosInstance.post("/user/admin/update_password", data);
+}
+
+export async function meetingRoomList(
+  name: string,
+  capacity: number,
+  equipment: string,
+  pageNo: number,
+  pageSize: number
+) {
+  return await axiosInstance.get("/meeting-room/list", {
+    params: {
+      name,
+      capacity,
+      equipment,
+      pageNo,
+      pageSize,
+    },
+  });
+}
+
+export async function deleteMeetingRoom(id: number) {
+  return await axiosInstance.delete("/meeting-room/" + id);
+}
+
+export async function createMeetingRoom(meetingRoom: CreateMeetingRoom) {
+  return await axiosInstance.post("/meeting-room/create", meetingRoom);
+}
+
+export async function updateMeetingRoom(meetingRoom: UpdateMeetingRoom) {
+  return await axiosInstance.put("/meeting-room/update", meetingRoom);
+}
+
+export async function findMeetingRoom(id: number) {
+  return await axiosInstance.get("/meeting-room/" + id);
+}
+
+export async function bookingList(
+  searchBooking: SearchBooking,
+  pageNo: number,
+  pageSize: number
+) {
+  let bookingTimeRangeStart;
+  let bookingTimeRangeEnd;
+
+  // 日期和时间分别要用 DatePicker 和 TimePicker，所以分为 2 个字段
+  if (searchBooking.rangeStartDate && searchBooking.rangeStartTime) {
+    const rangeStartDateStr = dayjs(searchBooking.rangeStartDate).format(
+      "YYYY-MM-DD"
+    );
+    const rangeStartTimeStr = dayjs(searchBooking.rangeStartTime).format(
+      "HH:mm"
+    );
+    bookingTimeRangeStart = dayjs(
+      rangeStartDateStr + " " + rangeStartTimeStr
+    ).valueOf();
+  }
+
+  if (searchBooking.rangeEndDate && searchBooking.rangeEndTime) {
+    const rangeEndDateStr = dayjs(searchBooking.rangeEndDate).format(
+      "YYYY-MM-DD"
+    );
+    const rangeEndTimeStr = dayjs(searchBooking.rangeEndTime).format("HH:mm");
+    bookingTimeRangeEnd = dayjs(
+      rangeEndDateStr + " " + rangeEndTimeStr
+    ).valueOf();
+  }
+
+  return await axiosInstance.get("/booking/list", {
+    params: {
+      username: searchBooking.username,
+      meetingRoomName: searchBooking.meetingRoomName,
+      meetingRoomPosition: searchBooking.meetingRoomPosition,
+      bookingTimeRangeStart,
+      bookingTimeRangeEnd,
+      pageNo: pageNo,
+      pageSize: pageSize,
+    },
+  });
+}
+
+export async function apply(id: number) {
+  return await axiosInstance.get("/booking/apply/" + id);
+}
+
+export async function reject(id: number) {
+  return await axiosInstance.get("/booking/reject/" + id);
+}
+
+export async function unbind(id: number) {
+  return await axiosInstance.get("/booking/unbind/" + id);
+}
+
+export async function meetingRoomUsedCount(startTime: string, endTime: string) {
+  return await axiosInstance.get("/statistic/meetingRoomUsedCount", {
+    params: {
+      startTime,
+      endTime,
+    },
+  });
+}
+
+export async function userBookingCount(startTime: string, endTime: string) {
+  return await axiosInstance.get("/statistic/userBookingCount", {
+    params: {
+      startTime,
+      endTime,
+    },
+  });
 }

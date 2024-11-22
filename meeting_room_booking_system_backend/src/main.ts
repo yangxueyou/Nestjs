@@ -12,7 +12,9 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   // 全局启用 ValidationPipe：
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true, // body 参数自动转换类型，否则时间格式会被识别为字符串
+  }));
   app.useGlobalInterceptors(new FormatResponseInterceptor());
   app.useGlobalInterceptors(new InvokeRecordInterceptor());
   app.useGlobalFilters(new UnloginFilter());
