@@ -19,6 +19,7 @@ import { MeetingRoom } from './meeting-room/entities/meeting-room.entity';
 import { BookingModule } from './booking/booking.module';
 import { Booking } from './booking/entities/booking.entity';
 import { StatisticModule } from './statistic/statistic.module';
+import * as path from 'path';
 
 @Module({
   imports: [
@@ -73,8 +74,12 @@ import { StatisticModule } from './statistic/statistic.module';
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: 'src/.env',
+      envFilePath: path.join(__dirname, '.env'),
     }),
+    // ConfigModule.forRoot({
+    //   isGlobal: true,
+    //   envFilePath: 'src/.env',
+    // }),
     UserModule,
     RedisModule,
     EmailModule,
