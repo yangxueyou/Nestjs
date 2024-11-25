@@ -11,15 +11,12 @@ import { ConfigService } from '@nestjs/config';
     {
       provide: 'REDIS_CLIENT',
       async useFactory(configService: ConfigService) {
-        console.log(configService.get('redis_server_host'));
-        console.log(configService.get('redis_server_port'));
-
         const client = createClient({
           socket: {
             host: configService.get('redis_server_host'),
             port: configService.get('redis_server_port'),
           },
-          database: configService.get('redis_server_db'), // database 指定为 1，因为我们之前都是用的默认的 0
+          database: configService.get('redis_server_db'), // 工作空间
         });
         await client.connect();
         return client;
