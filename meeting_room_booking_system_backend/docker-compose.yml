@@ -1,7 +1,8 @@
-version: '3.8'
+version: '4.2'
 services:
   fe-app:
     image: registry.cn-hangzhou.aliyuncs.com/fe_admin_test/admin:0.0.1
+    # image: fe-container:first
     ports:
       - 80:80
     depends_on:
@@ -19,6 +20,8 @@ services:
       - common-network
   mysql-container:
     image: mysql
+    ports:
+      - 3306:3306
     volumes:
       - /Users/svf/mysql-data:/var/lib/mysql
     environment:
