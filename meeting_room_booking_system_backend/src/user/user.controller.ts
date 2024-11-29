@@ -15,12 +15,15 @@ import {
   HttpStatus,
   UploadedFile,
   UseInterceptors,
+  UseGuards,
+  Req,
+  Res,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { EmailService } from '../email/email.service';
 import { RedisService } from '../redis/redis.service';
-import { LoginUserDto } from './dto/login-user.dto';
+import { LoginUserDto, LoginUserDtoAuth } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RequireLogin, UserInfo } from '../custom.decorator';
@@ -40,6 +43,8 @@ import { RefreshTokenVo } from './vo/refresh-token.vo';
 import { UserListVo } from './vo/user-list.vo';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { storage } from '../my-file-storage';
+import { AuthGuard } from '@nestjs/passport';
+import { Request, Response } from 'express';
 
 @ApiTags('用户管理模块')
 @Controller('user')
@@ -57,6 +62,125 @@ export class UserController {
 
   @Inject(ConfigService)
   private configService: ConfigService;
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {}
+
+  @Get('callback/google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req, @Res() res: Response) {
+    if (!req.user) {
+      throw new BadRequestException('google 登录失败');
+    }
+
+    const foundUser = await this.userService.findUserByEmail(req.user.email);
+
+    if (foundUser) {
+      const vo = new LoginUserVo();
+      vo.userInfo = {
+        id: foundUser.id,
+        username: foundUser.username,
+        nickName: foundUser.nickName,
+        email: foundUser.email,
+        phoneNumber: foundUser.phoneNumber,
+        headPic: foundUser.headPic,
+        createTime: foundUser.createTime.getTime(),
+        isFrozen: foundUser.isFrozen,
+        isAdmin: foundUser.isAdmin,
+        roles: foundUser.roles.map((item) => item.name),
+        permissions: foundUser.roles.reduce((arr, item) => {
+          item.permissions.forEach((permission) => {
+            if (arr.indexOf(permission) === -1) {
+              arr.push(permission);
+            }
+          });
+          return arr;
+        }, []),
+      };
+      vo.accessToken = this.jwtService.sign(
+        {
+          userId: vo.userInfo.id,
+          username: vo.userInfo.username,
+          email: vo.userInfo.email,
+          roles: vo.userInfo.roles,
+          permissions: vo.userInfo.permissions,
+        },
+        {
+          expiresIn:
+            this.configService.get('jwt_access_token_expires_time') || '30m',
+        },
+      );
+
+      vo.refreshToken = this.jwtService.sign(
+        {
+          userId: vo.userInfo.id,
+        },
+        {
+          expiresIn:
+            this.configService.get('jwt_refresh_token_expres_time') || '7d',
+        },
+      );
+
+      res.cookie('userInfo', JSON.stringify(vo.userInfo))
+      res.cookie('asscessToken', vo.accessToken)
+      res.cookie('refreshToken', vo.refreshToken)
+
+      // return vo;
+    } else {
+      const user = await this.userService.registerByGoogleInfo(
+        req.user.email,
+        req.user.firstName + ' ' + req.user.lastName,
+        req.user.picture,
+      );
+
+      const vo = new LoginUserVo();
+      vo.userInfo = {
+        id: user.id,
+        username: user.username,
+        nickName: user.nickName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        headPic: user.headPic,
+        createTime: user.createTime.getTime(),
+        isFrozen: user.isFrozen,
+        isAdmin: user.isAdmin,
+        roles: [],
+        permissions: [],
+      };
+
+      vo.accessToken = this.jwtService.sign(
+        {
+          userId: vo.userInfo.id,
+          username: vo.userInfo.username,
+          email: vo.userInfo.email,
+          roles: vo.userInfo.roles,
+          permissions: vo.userInfo.permissions,
+        },
+        {
+          expiresIn:
+            this.configService.get('jwt_access_token_expires_time') || '30m',
+        },
+      );
+
+      vo.refreshToken = this.jwtService.sign(
+        {
+          userId: vo.userInfo.id,
+        },
+        {
+          expiresIn:
+            this.configService.get('jwt_refresh_token_expres_time') || '7d',
+        },
+      );
+
+      res.cookie('userInfo', JSON.stringify(vo.userInfo))
+      res.cookie('asscessToken', vo.accessToken)
+      res.cookie('refreshToken', vo.refreshToken)
+      // return vo;
+    }
+
+    res.redirect('http://localhost:3000')
+  }
 
   @Post('upload')
   @UseInterceptors(
@@ -310,9 +434,10 @@ export class UserController {
     description: '用户信息和 token',
     type: LoginUserVo, // 在 LoginUserDto 和 LoginUserVo 里标识下属性：
   })
+  @UseGuards(AuthGuard('local'))
   @Post('login')
-  async userLogin(@Body() loginUser: LoginUserDto) {
-    const vo = await this.userService.login(loginUser, false);
+  async userLogin(@UserInfo() vo: LoginUserDtoAuth) {
+    // const vo = await this.userService.login(loginUser, false);
 
     vo.accessToken = this.jwtService.sign(
       {
@@ -523,7 +648,7 @@ export class UserController {
     description: '发送成功',
     type: String,
   })
-  // http://localhost:3000/user/register-captcha?address=942237768@qq.com
+  // http://localhost:3005/user/register-captcha?address=942237768@qq.com
   // 访问这个地址就会触发发送验证码的逻辑
   @Get('register-captcha')
   async captcha(@Query('address') address: string) {

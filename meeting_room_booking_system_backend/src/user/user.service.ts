@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { md5 } from './utils';
 import { Like, Repository } from 'typeorm';
 import { RegisterUserDto } from './dto/register-user.dto';
-import { User } from './entities/user.entity';
+import { LoginType, User } from './entities/user.entity';
 import { RedisService } from '../redis/redis.service';
 import { Role } from './entities/role.entity';
 import { Permission } from './entities/permission.entity';
@@ -191,6 +191,7 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: {
         username: loginUserDto.username,
+        loginType: LoginType.USERNAME_PASSWORD,
         isAdmin,
       },
       // 根据 username 和 isAdmin 查询数据库，设置级联查询 roles 和 roles.permissions。
@@ -328,5 +329,30 @@ export class UserService {
       this.logger.error(e, UserService);
       return '注册失败';
     }
+  }
+
+  async registerByGoogleInfo(email: string, nickName: string, headPic: string) {
+    const newUser = new User();
+    newUser.email = email;
+    newUser.nickName = nickName;
+    newUser.headPic = headPic;
+    newUser.password = '';
+    newUser.username = email + Math.random().toString().slice(2, 10);
+    newUser.loginType = LoginType.GOOGLE;
+    newUser.isAdmin = false;
+
+    return this.userRepository.save(newUser);
+  }
+
+  async findUserByEmail(email: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        email: email,
+        isAdmin: false,
+      },
+      relations: ['roles', 'roles.permissions'],
+    });
+
+    return user;
   }
 }

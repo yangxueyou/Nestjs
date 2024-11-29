@@ -1,18 +1,29 @@
 import { UserOutlined } from "@ant-design/icons";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import "./index.css";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 export function Index() {
+  const [headPic, setHeadPic] = useState();
+
+  useEffect(() => {
+    const userInfo = localStorage.getItem("user_info");
+    if (userInfo) {
+      const info = JSON.parse(userInfo);
+      setHeadPic(info.headPic);
+    }
+  }, []);
+
   return (
     <div id="index-container">
       <div className="header">
-        {/* 注意没有写 to 的时候，会爆红 */}
-        <Link to={"/"}>
-          <h1>会议室预定系统-后台管理</h1>
-        </Link>
+        <h1>会议室预定系统</h1>
         <Link to={"/user/info_modify"}>
-          <UserOutlined className="icon" />
+          {headPic ? (
+            <img src={headPic} width={40} height={40} className="icon" />
+          ) : (
+            <UserOutlined className="icon" />
+          )}
         </Link>
       </div>
       <div className="body">

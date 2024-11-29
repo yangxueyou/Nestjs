@@ -8,6 +8,7 @@ import { UnloginFilter } from './unlogin.filter';
 import { CustomExceptionFilter } from './custom-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -22,6 +23,10 @@ async function bootstrap() {
 
   app.enableCors();
 
+  app.use(cookieParser());
+
+  // 静态文件目录 http://localhost:3005/uploads/1732690067126-279053387-stacy.jpg
+  // 这个端口是后端接口的端口，前端项目的端口是 3000
   app.useStaticAssets('uploads', {
     prefix: '/uploads',
   });

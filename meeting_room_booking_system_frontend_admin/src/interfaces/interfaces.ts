@@ -8,8 +8,8 @@ import { SearchBooking } from "../pages/BookingManage/BookingManage";
 import dayjs from "dayjs";
 
 const axiosInstance = axios.create({
-  // baseURL: "http://localhost:3000/",
-  baseURL: "http://localhost/api",
+  baseURL: "http://localhost:3005/",
+  // baseURL: "http://localhost/api",
   // baseURL: "http://116.62.235.242/api", // 服务器公网IP
   timeout: 3000,
 });
@@ -225,4 +225,8 @@ export async function userBookingCount(startTime: string, endTime: string) {
       endTime,
     },
   });
+}
+
+export async function presignedUrl(fileName: string) {
+  return axiosInstance.get(`/minio/presignedUrl?name=${fileName}`);
 }

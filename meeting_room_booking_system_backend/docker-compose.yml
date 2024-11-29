@@ -1,8 +1,8 @@
 version: '4.2'
 services:
   fe-app:
-    image: registry.cn-hangzhou.aliyuncs.com/fe_admin_test/admin:0.0.1
-    # image: fe-container:first
+    # image: registry.cn-hangzhou.aliyuncs.com/fe_admin_test/admin:0.0.1
+    image: fe-container:first
     ports:
       - 80:80
     depends_on:
@@ -31,6 +31,8 @@ services:
       - common-network
   redis-container:
     image: redis
+    ports:
+      - 6379:6379
     volumes:
       - /Users/svf/redis-data:/data
     networks:
