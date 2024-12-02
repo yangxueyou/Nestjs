@@ -56,7 +56,18 @@ export function Login() {
         >
           <Input.Password />
         </Form.Item>
-
+        <Form.Item {...layout1}>
+          <div>
+            <a
+              href="#"
+              onClick={() => {
+                window.location.href = "http://localhost:3005/user/google";
+              }}
+            >
+              Google 账号登录
+            </a>
+          </div>
+        </Form.Item>
         <Form.Item label=" ">
           <Button className="btn" type="primary" htmlType="submit">
             登录

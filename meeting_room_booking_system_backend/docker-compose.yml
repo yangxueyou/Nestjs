@@ -1,25 +1,29 @@
 version: '4.2'
 services:
-  fe-app:
-    # image: registry.cn-hangzhou.aliyuncs.com/fe_admin_test/admin:0.0.1
-    image: fe-container:first
-    ports:
-      - 80:80
-    depends_on:
-      - nest-app
-    networks:
-      - common-network
+  # fe-app:
+  #   # image: registry.cn-hangzhou.aliyuncs.com/fe_admin_test/admin:0.0.1
+  #   image: fe-container:first
+  #   ports:
+  #     - 80:80
+  #   depends_on:
+  #     - nest-app
+  #   networks:
+  #     - common-network
   nest-app:
     build:
       context: ./
       dockerfile: ./Dockerfile
+    ports:
+      - 3005:3005
     depends_on:
       - mysql-container
       - redis-container
+    restart: always
     networks:
       - common-network
   mysql-container:
     image: mysql
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci # 设置默认字符集
     ports:
       - 3306:3306
     volumes:
@@ -27,6 +31,7 @@ services:
     environment:
       MYSQL_DATABASE: meeting_room_booking_system
       MYSQL_ROOT_PASSWORD: xueyou
+    restart: always
     networks:
       - common-network
   redis-container:
@@ -35,6 +40,21 @@ services:
       - 6379:6379
     volumes:
       - /Users/svf/redis-data:/data
+    restart: always
+    networks:
+      - common-network
+  minio-container:
+    image: bitnami/minio
+    platform: linux/arm64
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - /Users/svf/minio:/bitnami/minio/data
+    environment:
+      MINIO_ROOT_USER: MINIO_ROOT_USER
+      MINIO_ROOT_PASSWORD: MINIO_ROOT_PASSWORD
+    restart: always
     networks:
       - common-network
 networks:

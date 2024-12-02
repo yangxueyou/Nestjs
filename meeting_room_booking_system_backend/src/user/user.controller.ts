@@ -63,6 +63,23 @@ export class UserController {
   @Inject(ConfigService)
   private configService: ConfigService;
 
+  // @Get('google')
+  // @UseGuards(AuthGuard('google'))
+  // async googleAuth() {}
+
+  // @Get('callback/google')
+  // @UseGuards(AuthGuard('google'))
+  // googleAuthRedirect(@Req() req) {
+  //   if (!req.user) {
+  //     return 'No user from google';
+  //   }
+
+  //   return {
+  //     message: 'User information from google',
+  //     user: req.user,
+  //   };
+  // }
+
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async googleAuth() {}
@@ -122,9 +139,9 @@ export class UserController {
         },
       );
 
-      res.cookie('userInfo', JSON.stringify(vo.userInfo))
-      res.cookie('asscessToken', vo.accessToken)
-      res.cookie('refreshToken', vo.refreshToken)
+      res.cookie('userInfo', JSON.stringify(vo.userInfo));
+      res.cookie('asscessToken', vo.accessToken);
+      res.cookie('refreshToken', vo.refreshToken);
 
       // return vo;
     } else {
@@ -173,13 +190,13 @@ export class UserController {
         },
       );
 
-      res.cookie('userInfo', JSON.stringify(vo.userInfo))
-      res.cookie('asscessToken', vo.accessToken)
-      res.cookie('refreshToken', vo.refreshToken)
+      res.cookie('userInfo', JSON.stringify(vo.userInfo));
+      res.cookie('asscessToken', vo.accessToken);
+      res.cookie('refreshToken', vo.refreshToken);
       // return vo;
     }
 
-    res.redirect('http://localhost:3000')
+    res.redirect('http://localhost:3000');
   }
 
   @Post('upload')
@@ -339,7 +356,11 @@ export class UserController {
     @UserInfo('userId') userId: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return await this.userService.update(userId, updateUserDto);
+    const res = await this.userService.update(userId, updateUserDto);
+
+    this.redisService.del(`update_user_captcha_${updateUserDto.email}`);
+
+    return res;
   }
 
   // @ApiBearerAuth()
